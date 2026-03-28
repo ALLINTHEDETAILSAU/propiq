@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PropIQ — Australian Property Investment Analyser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #F5F0E8;
+    --ink: #1A1A18;
+    --ink-light: #4A4A42;
+    --gold: #C4922A;
+    --gold-light: #E8C97A;
+    --gold-pale: #FBF5E6;
+    --green: #2A6B4A;
+    --green-light: #E8F5EE;
+    --border: rgba(26,26,24,0.12);
+    --radius: 4px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 3rem;
+    background: rgba(245,240,232,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .logo span { color: var(--gold); }
+  nav a {
+    color: var(--ink-light); text-decoration: none; font-size: 0.9rem;
+    font-weight: 400; letter-spacing: 0.02em;
+    transition: color 0.2s;
+  }
+  nav a:hover { color: var(--gold); }
+  .nav-links { display: flex; gap: 2.5rem; align-items: center; }
+  .nav-cta {
+    background: var(--ink); color: var(--cream) !important;
+    padding: 0.6rem 1.4rem; border-radius: var(--radius);
+    font-weight: 500 !important;
+    transition: background 0.2s !important;
+  }
+  .nav-cta:hover { background: var(--gold) !important; color: var(--ink) !important; }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 8rem 3rem 5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: -20%; right: -10%;
+    width: 60vw; height: 60vw;
+    background: radial-gradient(ellipse, rgba(196,146,42,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: var(--gold-pale); border: 1px solid rgba(196,146,42,0.3);
+    color: var(--gold); font-size: 0.8rem; font-weight: 500;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 0.4rem 1rem; border-radius: 100px;
+    margin-bottom: 2rem; width: fit-content;
+  }
+  .hero-tag::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gold); flex-shrink: 0;
+  }
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.8rem, 5vw, 5rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    max-width: 700px;
+    margin-bottom: 1.5rem;
+  }
+  h1 em { font-style: italic; color: var(--gold); }
+  .hero-sub {
+    font-size: 1.15rem; color: var(--ink-light);
+    max-width: 520px; margin-bottom: 3rem;
+    font-weight: 300; line-height: 1.7;
+  }
+  .hero-actions { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--ink); color: var(--cream);
+    padding: 0.9rem 2rem; border: none; border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 500;
+    cursor: pointer; text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+  }
+  .btn-primary:hover { background: var(--gold); color: var(--ink); transform: translateY(-1px); }
+  .btn-secondary {
+    color: var(--ink-light); font-size: 0.9rem; font-weight: 400;
+    text-decoration: none; display: flex; align-items: center; gap: 0.4rem;
+    transition: color 0.2s;
+  }
+  .btn-secondary:hover { color: var(--gold); }
+  .hero-stats {
+    display: flex; gap: 3rem; margin-top: 5rem;
+    padding-top: 2.5rem; border-top: 1px solid var(--border);
+  }
+  .stat-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem; color: var(--ink);
+  }
+  .stat-label { font-size: 0.85rem; color: var(--ink-light); margin-top: 0.2rem; }
+
+  /* ── SECTION SHARED ── */
+  section { padding: 6rem 3rem; }
+  .section-tag {
+    font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--gold);
+    margin-bottom: 1rem;
+  }
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    letter-spacing: -0.02em; line-height: 1.15;
+    margin-bottom: 1rem;
+  }
+  h2 em { font-style: italic; }
+  .section-sub { color: var(--ink-light); max-width: 480px; font-weight: 300; line-height: 1.7; }
+
+  /* ── HOW IT WORKS ── */
+  .how { background: white; }
+  .how-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0; margin-top: 4rem;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .step {
+    padding: 2.5rem;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+  .step:last-child { border-right: none; }
+  .step-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 3.5rem; color: rgba(196,146,42,0.15);
+    line-height: 1; margin-bottom: 1.5rem;
+  }
+  .step h3 {
+    font-size: 1.05rem; font-weight: 500; margin-bottom: 0.6rem;
+  }
+  .step p { font-size: 0.9rem; color: var(--ink-light); line-height: 1.6; }
+
+  /* ── WHAT YOU GET ── */
+  .features-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem; margin-top: 4rem;
+  }
+  .feature-card {
+    background: white; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 2rem;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .feature-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+  .feature-icon {
+    width: 40px; height: 40px; background: var(--gold-pale);
+    border-radius: var(--radius); display: flex; align-items: center;
+    justify-content: center; margin-bottom: 1.2rem;
+  }
+  .feature-icon svg { width: 20px; height: 20px; }
+  .feature-card h3 { font-size: 1rem; font-weight: 500; margin-bottom: 0.5rem; }
+  .feature-card p { font-size: 0.875rem; color: var(--ink-light); line-height: 1.6; }
+
+  /* ── ANALYSER FORM ── */
+  #analyser {
+    background: var(--ink);
+    color: var(--cream);
+  }
+  #analyser .section-tag { color: var(--gold-light); }
+  #analyser h2 { color: var(--cream); }
+  #analyser .section-sub { color: rgba(245,240,232,0.6); }
+
+  .analyser-wrap {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 5rem; margin-top: 4rem; align-items: start;
+  }
+  @media (max-width: 800px) {
+    .analyser-wrap { grid-template-columns: 1fr; gap: 3rem; }
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { gap: 1rem; }
+    .hero { padding: 7rem 1.5rem 3rem; }
+    section { padding: 4rem 1.5rem; }
+    .hero-stats { gap: 2rem; flex-wrap: wrap; }
+  }
+
+  .form-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(245,240,232,0.12);
+    border-radius: var(--radius); padding: 2.5rem;
+  }
+  .form-row { margin-bottom: 1.25rem; }
+  .form-row label {
+    display: block; font-size: 0.8rem; font-weight: 500;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    color: rgba(245,240,232,0.5); margin-bottom: 0.5rem;
+  }
+  .form-row input, .form-row select {
+    width: 100%; background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(245,240,232,0.12); border-radius: var(--radius);
+    color: var(--cream); font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
+    padding: 0.8rem 1rem; outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-row input::placeholder { color: rgba(245,240,232,0.25); }
+  .form-row input:focus, .form-row select:focus {
+    border-color: var(--gold);
+  }
+  .form-row select option { background: #1A1A18; color: var(--cream); }
+  .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  .price-pill {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(196,146,42,0.12); border: 1px solid rgba(196,146,42,0.25);
+    border-radius: var(--radius); padding: 1rem 1.25rem; margin: 1.5rem 0;
+  }
+  .price-pill .price-label { font-size: 0.85rem; color: var(--gold-light); }
+  .price-pill .price-amount {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem; color: var(--gold-light);
+  }
+
+  .btn-analyse {
+    width: 100%; background: var(--gold); color: var(--ink);
+    border: none; border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 500;
+    padding: 1rem; cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  }
+  .btn-analyse:hover { background: var(--gold-light); transform: translateY(-1px); }
+  .btn-analyse:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .trust-row {
+    display: flex; gap: 1.5rem; margin-top: 1.25rem; flex-wrap: wrap;
+  }
+  .trust-item {
+    font-size: 0.78rem; color: rgba(245,240,232,0.4);
+    display: flex; align-items: center; gap: 0.35rem;
+  }
+  .trust-item::before {
+    content: '✓'; color: var(--gold); font-size: 0.7rem;
+  }
+
+  /* ── ANALYSER ASIDE ── */
+  .analyser-aside {}
+  .aside-heading {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem; color: var(--cream); margin-bottom: 2rem;
+    line-height: 1.25;
+  }
+  .report-preview {
+    border: 1px solid rgba(245,240,232,0.12);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .report-preview-header {
+    background: rgba(255,255,255,0.04);
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(245,240,232,0.08);
+    font-size: 0.8rem; font-weight: 500; letter-spacing: 0.04em;
+    text-transform: uppercase; color: rgba(245,240,232,0.4);
+  }
+  .report-section {
+    padding: 1.25rem;
+    border-bottom: 1px solid rgba(245,240,232,0.06);
+  }
+  .report-section:last-child { border-bottom: none; }
+  .report-section-title {
+    font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 0.75rem; font-weight: 500;
+  }
+  .report-blur {
+    filter: blur(6px); user-select: none;
+    color: rgba(245,240,232,0.6); font-size: 0.85rem; line-height: 1.7;
+  }
+  .report-metric {
+    display: flex; justify-content: space-between;
+    font-size: 0.85rem;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid rgba(245,240,232,0.05);
+  }
+  .report-metric:last-child { border-bottom: none; }
+  .report-metric .label { color: rgba(245,240,232,0.4); }
+  .report-metric .val { color: var(--cream); font-weight: 500; }
+  .report-metric .val.pos { color: #6BCB8B; }
+  .report-metric .val.neg { color: #E87070; }
+
+  /* ── REPORT DISPLAY ── */
+  #report-output {
+    display: none;
+    background: white; color: var(--ink);
+    border-radius: var(--radius); padding: 3rem;
+    margin-top: 3rem;
+  }
+  #report-output.active { display: block; }
+  .report-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem; margin-bottom: 0.25rem;
+  }
+  .report-address { color: var(--ink-light); margin-bottom: 2rem; font-size: 0.9rem; }
+  .report-score-band {
+    display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 2.5rem;
+  }
+  .score-card {
+    flex: 1; min-width: 150px;
+    background: var(--gold-pale); border: 1px solid rgba(196,146,42,0.2);
+    border-radius: var(--radius); padding: 1.25rem; text-align: center;
+  }
+  .score-card .score-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.5rem; color: var(--gold);
+  }
+  .score-card .score-label { font-size: 0.75rem; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.25rem; }
+  .report-section-h {
+    font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--gold); font-weight: 500;
+    margin: 2rem 0 1rem; padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .report-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .report-table td { padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
+  .report-table td:last-child { text-align: right; font-weight: 500; }
+  .report-body { font-size: 0.9rem; color: var(--ink-light); line-height: 1.75; }
+  .report-body p { margin-bottom: 0.75rem; }
+  .verdict-box {
+    background: var(--green-light); border-left: 3px solid var(--green);
+    border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-top: 1.5rem;
+  }
+  .verdict-box p { color: var(--green); font-size: 0.9rem; margin: 0; }
+
+  /* ── PRICING ── */
+  .pricing { background: white; }
+  .pricing-card {
+    max-width: 480px; margin: 3rem auto 0;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 3rem; text-align: center;
+    position: relative;
+  }
+  .pricing-badge {
+    position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+    background: var(--gold); color: var(--ink);
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 0.3rem 1rem; border-radius: 100px;
+  }
+  .pricing-price {
+    font-family: 'DM Serif Display', serif;
+    font-size: 3.5rem; margin: 1rem 0;
+  }
+  .pricing-price sup { font-size: 1.5rem; vertical-align: super; font-family: 'DM Sans', sans-serif; }
+  .pricing-desc { color: var(--ink-light); font-size: 0.9rem; margin-bottom: 2rem; }
+  .pricing-list { text-align: left; margin-bottom: 2rem; }
+  .pricing-list li {
+    list-style: none; padding: 0.5rem 0;
+    font-size: 0.9rem; display: flex; gap: 0.5rem; align-items: flex-start;
+    border-bottom: 1px solid var(--border);
+  }
+  .pricing-list li:last-child { border-bottom: none; }
+  .pricing-list li::before { content: '→'; color: var(--gold); flex-shrink: 0; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--ink); color: rgba(245,240,232,0.5);
+    padding: 3rem; text-align: center; font-size: 0.85rem;
+  }
+  footer .footer-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.25rem; color: var(--cream); margin-bottom: 0.75rem;
+    display: block;
+  }
+  footer .footer-logo span { color: var(--gold); }
+  footer p { margin-bottom: 0.5rem; }
+  footer a { color: rgba(245,240,232,0.5); text-decoration: none; }
+  footer a:hover { color: var(--gold); }
+
+  /* ── LOADER ── */
+  .loader { display: none; text-align: center; padding: 2rem 0; }
+  .loader.active { display: block; }
+  .loader-steps { margin-top: 1rem; }
+  .loader-step {
+    font-size: 0.85rem; color: rgba(245,240,232,0.5);
+    padding: 0.3rem 0; transition: color 0.3s;
+  }
+  .loader-step.active { color: var(--gold); }
+  .loader-step.done { color: rgba(245,240,232,0.3); text-decoration: line-through; }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 2px solid rgba(196,146,42,0.2);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    background: rgba(232,112,112,0.1); border: 1px solid rgba(232,112,112,0.3);
+    border-radius: var(--radius); padding: 1rem; margin-top: 1rem;
+    color: #E87070; font-size: 0.9rem; display: none;
+  }
+  .error-msg.active { display: block; }
+
+  /* ── PAYMENT MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    z-index: 1000; display: none; align-items: center; justify-content: center;
+    padding: 1.5rem;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--cream); border-radius: var(--radius);
+    padding: 2.5rem; max-width: 440px; width: 100%;
+    position: relative;
+  }
+  .modal h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem; margin-bottom: 0.5rem;
+  }
+  .modal p { color: var(--ink-light); font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .modal-close {
+    position: absolute; top: 1rem; right: 1rem;
+    background: none; border: none; cursor: pointer;
+    color: var(--ink-light); font-size: 1.25rem;
+  }
+  #card-element {
+    background: white; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem; margin-bottom: 1.5rem;
+  }
+  #card-errors { color: #E87070; font-size: 0.85rem; margin-bottom: 1rem; }
+  .modal-price-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1.5rem; padding: 0.75rem; background: var(--gold-pale);
+    border-radius: var(--radius);
+  }
+  .modal-price-row .lbl { font-size: 0.85rem; color: var(--ink-light); }
+  .modal-price-row .amt {
+    font-family: 'DM Serif Display', serif; font-size: 1.25rem; color: var(--gold);
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">Prop<span>IQ</span></a>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#features">What you get</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#analyser" class="nav-cta">Analyse a property →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">Trusted Australian property intelligence</div>
+  <h1>Know if a property is worth it — <em>before</em> you buy</h1>
+  <p class="hero-sub">PropIQ draws on decades of Australian property market data, suburb-level trends, and investment methodology refined across thousands of transactions — delivered as a detailed report in minutes.</p>
+  <div class="hero-actions">
+    <a href="#analyser" class="btn-primary">Analyse a property →</a>
+    <a href="#how" class="btn-secondary">See how it works ↓</a>
+  </div>
+  <div class="hero-stats">
+    <div>
+      <div class="stat-num">2 min</div>
+      <div class="stat-label">Average report time</div>
+    </div>
+    <div>
+      <div class="stat-num">10+ yrs</div>
+      <div class="stat-label">Market data coverage</div>
+    </div>
+    <div>
+      <div class="stat-num">$19</div>
+      <div class="stat-label">Per report, no subscription</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="section-tag">How it works</div>
+  <h2>Three steps to <em>clarity</em></h2>
+  <p class="section-sub">No sign-up. No subscription. Just enter the property, pay once, get your report.</p>
+  <div class="how-grid">
+    <div class="step">
+      <div class="step-num">01</div>
+      <h3>Enter the property</h3>
+      <p>Paste in any Australian address or lot number. Add optional details about budget and goals to sharpen the analysis.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <h3>Deep market research</h3>
+      <p>We cross-reference public listings, suburb growth histories, rental data, council zoning records, and comparable sales — all in real time.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <h3>Receive your report</h3>
+      <p>A detailed investor-grade report with ROI projections, rental yield, renovation upside, and a plain-English recommendation — built on proven investment methodology.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-tag">What's included</div>
+  <h2>Every report covers <em>eight</em> key areas</h2>
+  <p class="section-sub">Built for property investors who want signal, not noise.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#C4922A" stroke-width="1.5"><path d="M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"/></svg>
+      </div>
+      <h3>Property overview</h3>
+      <p>Estimated current value, land size, dwelling type, zoning classification, and suburb profile summary.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#C4922A" stroke-width="1.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      </div>
+      <h3>ROI analysis</h3>
+      <p>5-year and 10-year return on investment projections based on suburb capital growth rates and purchase price.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#C4922A" stroke-width="1.5"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+      </div>
+      <h3>Rental yield estimate</h3>
+      <p>Gross and net rental yield projection. Comparable rental listings in the suburb to validate assumptions.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#C4922A" stroke-width="1.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      </div>
+      <h3>Market trend analysis</h3>
+      <p>12-month suburb price momentum, days on market, clearance rate, and demand/supply indicators.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#C4922A" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      </div>
+      <h3>Renovation upside</h3>
+      <p>Estimated value add from common renovation scenarios — cosmetic, structural, and subdivision potential.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#C4922A" stroke-width="1.5"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      </div>
+      <h3>Risk assessment</h3>
+      <p>Flood zones, bushfire overlays, infrastructure risk factors, and suburb demand vulnerability score.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#C4922A" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h3>Comparable sales</h3>
+      <p>Recent sales of similar properties within the suburb — with price per m² benchmarks for context.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#C4922A" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <h3>Investor verdict</h3>
+      <p>A plain-English buy / hold / avoid recommendation with confidence rating and key risk flags.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ANALYSER -->
+<section id="analyser">
+  <div class="section-tag">Run an analysis</div>
+  <h2>Enter any <em>Australian</em> property</h2>
+  <p class="section-sub">Anonymous. No account required. Pay once, receive your expert report instantly.</p>
+
+  <div class="analyser-wrap">
+    <!-- FORM -->
+    <div>
+      <div class="form-card">
+        <div class="form-row">
+          <label>Property address or lot number *</label>
+          <input type="text" id="f-address" placeholder="e.g. 14 Coastal Drive, Mandurah WA 6210" />
+        </div>
+        <div class="form-grid-2">
+          <div class="form-row">
+            <label>Property type</label>
+            <select id="f-type">
+              <option value="house">House</option>
+              <option value="unit">Unit / Apartment</option>
+              <option value="townhouse">Townhouse</option>
+              <option value="land">Vacant land</option>
+              <option value="commercial">Commercial</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Purchase price ($AUD)</label>
+            <input type="number" id="f-price" placeholder="e.g. 650000" />
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-row">
+            <label>Bedrooms</label>
+            <select id="f-beds">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+              <option value="4">4</option>
+              <option value="5+">5+</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Investor goal</label>
+            <select id="f-goal">
+              <option value="rental">Rental income</option>
+              <option value="growth">Capital growth</option>
+              <option value="reno">Renovate &amp; sell</option>
+              <option value="both">Balanced</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Additional context (optional)</label>
+          <input type="text" id="f-notes" placeholder="e.g. corner lot, near train station, needs work" />
+        </div>
+
+        <div class="price-pill">
+          <span class="price-label">Report price</span>
+          <span class="price-amount">$19 AUD</span>
+        </div>
+
+        <button class="btn-analyse" id="btn-analyse" onclick="initiateAnalysis()">
+          Analyse this property →
+        </button>
+
+        <div class="trust-row">
+          <span class="trust-item">Stripe-secured payment</span>
+          <span class="trust-item">Instant delivery</span>
+          <span class="trust-item">10+ years of market data</span>
+        </div>
+
+        <div class="error-msg" id="form-error"></div>
+      </div>
+
+      <!-- LOADER -->
+      <div class="loader" id="loader">
+        <div class="spinner"></div>
+        <div class="loader-steps" id="loader-steps"></div>
+      </div>
+
+      <!-- REPORT OUTPUT -->
+      <div id="report-output"></div>
+    </div>
+
+    <!-- ASIDE: SAMPLE PREVIEW -->
+    <div class="analyser-aside">
+      <div class="aside-heading">Here's what your report will look like</div>
+      <p style="color:rgba(245,240,232,0.45);font-size:0.875rem;margin-bottom:1.5rem;font-weight:300;line-height:1.6;">Every report is built on the same methodology used by seasoned Australian property investors — covering the eight fundamentals that separate a strong deal from a costly mistake.</p>
+      <div class="report-preview">
+        <div class="report-preview-header">PropIQ Investor Report — sample</div>
+        <div class="report-section">
+          <div class="report-section-title">Investment score</div>
+          <div style="display:flex;gap:0.75rem;">
+            <div style="flex:1;text-align:center;padding:0.75rem;background:rgba(196,146,42,0.08);border-radius:4px;">
+              <div style="font-family:'DM Serif Display',serif;font-size:2rem;color:#C4922A;">7.8</div>
+              <div style="font-size:0.7rem;color:rgba(245,240,232,0.4);margin-top:0.2rem;">Overall</div>
+            </div>
+            <div style="flex:1;text-align:center;padding:0.75rem;background:rgba(196,146,42,0.08);border-radius:4px;">
+              <div style="font-family:'DM Serif Display',serif;font-size:2rem;color:#C4922A;">6.4</div>
+              <div style="font-size:0.7rem;color:rgba(245,240,232,0.4);margin-top:0.2rem;">Risk</div>
+            </div>
+            <div style="flex:1;text-align:center;padding:0.75rem;background:rgba(196,146,42,0.08);border-radius:4px;">
+              <div style="font-family:'DM Serif Display',serif;font-size:2rem;color:#C4922A;">8.2</div>
+              <div style="font-size:0.7rem;color:rgba(245,240,232,0.4);margin-top:0.2rem;">Growth</div>
+            </div>
+          </div>
+        </div>
+        <div class="report-section">
+          <div class="report-section-title">Key metrics</div>
+          <div class="report-metric"><span class="label">Estimated value</span><span class="val">$648,000</span></div>
+          <div class="report-metric"><span class="label">Gross rental yield</span><span class="val pos">4.8%</span></div>
+          <div class="report-metric"><span class="label">5yr capital growth est.</span><span class="val pos">+31%</span></div>
+          <div class="report-metric"><span class="label">Reno upside</span><span class="val pos">+$85k</span></div>
+          <div class="report-metric"><span class="label">Vacancy rate (suburb)</span><span class="val">1.2%</span></div>
+        </div>
+        <div class="report-section">
+          <div class="report-section-title">Market analysis</div>
+          <div class="report-blur">Suburb median has increased 12.4% over the past 12 months, outperforming the broader metro area. Days on market sitting at 18, down from 34 a year ago. Strong demand from interstate migration driving ongoing upward pressure on pricing in this corridor...</div>
+        </div>
+        <div class="report-section">
+          <div class="report-section-title">Verdict</div>
+          <div style="background:rgba(42,107,74,0.15);border-left:2px solid #2A6B4A;padding:0.75rem 1rem;border-radius:4px;">
+            <div class="report-blur" style="color:#6BCB8B;">Strong buy signal. Rental fundamentals are solid and the suburb is in an early growth phase with low supply. Renovation upside adds a clear value-add strategy on exit.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="section-tag">Pricing</div>
+  <h2>Simple, <em>pay-as-you-go</em></h2>
+  <div class="pricing-card">
+    <div class="pricing-badge">No subscription</div>
+    <p style="color:var(--ink-light);font-size:0.9rem;margin-top:1rem;">Investor report</p>
+    <div class="pricing-price"><sup>$</sup>19</div>
+    <p class="pricing-desc">Per report. Pay once, receive instantly. No account needed.</p>
+    <ul class="pricing-list">
+      <li>Full 8-point investor analysis</li>
+      <li>ROI + capital growth projections</li>
+      <li>Rental yield estimate</li>
+      <li>Renovation upside scenario</li>
+      <li>Risk flags and suburb data</li>
+      <li>Plain-English buy/hold/avoid verdict</li>
+      <li>Built on 10+ years of market data</li>
+    </ul>
+    <a href="#analyser" class="btn-primary" style="display:flex;justify-content:center;">Get your report →</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-logo">Prop<span>IQ</span></span>
+  <p>Trusted property investment intelligence for Australian investors.</p>
+  <p>Reports are generated for research purposes only and do not constitute financial advice.</p>
+  <p style="margin-top:1rem;"><a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="mailto:hello@propiq.com.au">hello@propiq.com.au</a></p>
+</footer>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-overlay" id="payment-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3>Complete your purchase</h3>
+    <p>Enter your card details to unlock your PropIQ property report.</p>
+    <div class="modal-price-row">
+      <span class="lbl">PropIQ Investor Report</span>
+      <span class="amt">$19 AUD</span>
+    </div>
+    <div id="card-element"></div>
+    <div id="card-errors"></div>
+    <button class="btn-primary" id="pay-btn" onclick="processPayment()" style="width:100%;justify-content:center;">
+      Pay $19 &amp; generate report →
+    </button>
+    <p style="font-size:0.75rem;color:var(--ink-light);text-align:center;margin-top:0.75rem;">
+      Secured by Stripe. Your card details are never stored.
+    </p>
+  </div>
+</div>
+
+<script>
+/* ─── CONFIG ──────────────────────────────────────────── */
+const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
+const STRIPE_PUBLIC_KEY = 'pk_test_YOUR_STRIPE_PUBLISHABLE_KEY'; // Replace with your key
+
+let stripe, cardElement, formData = {};
+
+/* ─── STRIPE INIT ─────────────────────────────────────── */
+function initStripe() {
+  try {
+    stripe = Stripe(STRIPE_PUBLIC_KEY);
+    const elements = stripe.elements();
+    cardElement = elements.create('card', {
+      style: {
+        base: {
+          fontFamily: 'DM Sans, sans-serif',
+          fontSize: '16px',
+          color: '#1A1A18',
+          '::placeholder': { color: '#9CA3AF' }
+        }
+      }
+    });
+    cardElement.mount('#card-element');
+    cardElement.on('change', e => {
+      document.getElementById('card-errors').textContent = e.error ? e.error.message : '';
+    });
+  } catch(e) {
+    console.log('Stripe not initialised — test mode');
+  }
+}
+
+/* ─── FORM VALIDATION ─────────────────────────────────── */
+function showError(msg) {
+  const el = document.getElementById('form-error');
+  el.textContent = msg; el.classList.add('active');
+}
+function hideError() {
+  document.getElementById('form-error').classList.remove('active');
+}
+
+function initiateAnalysis() {
+  hideError();
+  const address = document.getElementById('f-address').value.trim();
+  if (!address) { showError('Please enter a property address or lot number.'); return; }
+
+  formData = {
+    address,
+    type: document.getElementById('f-type').value,
+    price: document.getElementById('f-price').value || 'not specified',
+    beds: document.getElementById('f-beds').value,
+    goal: document.getElementById('f-goal').value,
+    notes: document.getElementById('f-notes').value
+  };
+
+  openModal();
+}
+
+/* ─── MODAL ───────────────────────────────────────────── */
+function openModal() {
+  document.getElementById('payment-modal').classList.add('active');
+  if (!stripe) initStripe();
+}
+function closeModal() {
+  document.getElementById('payment-modal').classList.remove('active');
+}
+
+/* ─── PAYMENT ─────────────────────────────────────────── */
+async function processPayment() {
+  const btn = document.getElementById('pay-btn');
+  btn.disabled = true;
+  btn.textContent = 'Processing...';
+
+  /* In production: create PaymentIntent on your backend, confirm here.
+     For demo/test: skip Stripe and go straight to analysis. */
+  const isDemoMode = STRIPE_PUBLIC_KEY.includes('YOUR_STRIPE');
+
+  if (isDemoMode) {
+    closeModal();
+    runAnalysis();
+    return;
+  }
+
+  try {
+    /* Production flow: POST to your backend /create-payment-intent */
+    const intentRes = await fetch('/api/create-payment-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: 1900, currency: 'aud' })
+    });
+    const { clientSecret } = await intentRes.json();
+
+    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: { card: cardElement }
+    });
+
+    if (error) {
+      document.getElementById('card-errors').textContent = error.message;
+      btn.disabled = false;
+      btn.textContent = 'Pay $19 & generate report →';
+      return;
+    }
+
+    if (paymentIntent.status === 'succeeded') {
+      closeModal();
+      runAnalysis();
+    }
+  } catch(err) {
+    document.getElementById('card-errors').textContent = 'Payment failed. Please try again.';
+    btn.disabled = false;
+    btn.textContent = 'Pay $19 & generate report →';
+  }
+}
+
+/* ─── ANALYSIS ENGINE ─────────────────────────────────── */
+const LOADER_STEPS = [
+  'Searching property records...',
+  'Analysing suburb market trends...',
+  'Estimating rental yield...',
+  'Calculating ROI projections...',
+  'Assessing renovation upside...',
+  'Running risk analysis...',
+  'Compiling comparable sales...',
+  'Preparing your report...'
+];
+
+function showLoader() {
+  const loader = document.getElementById('loader');
+  loader.classList.add('active');
+  const stepsEl = document.getElementById('loader-steps');
+  stepsEl.innerHTML = LOADER_STEPS.map((s, i) =>
+    `<div class="loader-step" id="ls-${i}">${s}</div>`
+  ).join('');
+
+  let i = 0;
+  return setInterval(() => {
+    if (i > 0) document.getElementById(`ls-${i-1}`)?.classList.replace('active','done');
+    if (i < LOADER_STEPS.length) {
+      document.getElementById(`ls-${i}`)?.classList.add('active');
+      i++;
+    }
+  }, 1200);
+}
+
+function hideLoader(timer) {
+  clearInterval(timer);
+  document.getElementById('loader').classList.remove('active');
+}
+
+async function runAnalysis() {
+  document.getElementById('btn-analyse').disabled = true;
+  document.getElementById('report-output').classList.remove('active');
+  const timer = showLoader();
+  document.getElementById('analyser').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  const prompt = buildPrompt(formData);
+
+  try {
+    const res = await fetch(ANTHROPIC_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        system: `You are PropIQ, a professional Australian property investment analyst. You analyse properties and produce detailed investor reports. Always respond with a valid JSON object only — no markdown fences, no preamble. The JSON must exactly match the schema provided. Use Australian spelling. Be specific and data-driven. For unknown data, provide realistic AI-estimated figures based on suburb and market knowledge, clearly labelled as estimated.`,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    const text = data.content
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('');
+
+    let report;
+    try {
+      const clean = text.replace(/```json|```/g, '').trim();
+      report = JSON.parse(clean);
+    } catch {
+      throw new Error('Could not parse AI response.');
+    }
+
+    hideLoader(timer);
+    renderReport(report, formData.address);
+
+  } catch(err) {
+    hideLoader(timer);
+    showError('Analysis failed: ' + err.message + '. Please try again.');
+    document.getElementById('btn-analyse').disabled = false;
+  }
+}
+
+function buildPrompt(d) {
+  return `Analyse the following Australian property for investment potential and return a JSON report exactly matching this schema:
+
+{
+  "propertyOverview": {
+    "estimatedValue": "$XXX,XXX",
+    "estimatedValueNote": "string — AI estimated or from data",
+    "landSize": "XXX m²",
+    "dwellingType": "string",
+    "zoning": "string",
+    "suburb": "string",
+    "state": "string",
+    "suburbProfile": "2-3 sentence suburb summary"
+  },
+  "investmentScores": {
+    "overall": 7.5,
+    "growth": 8.0,
+    "yield": 6.5,
+    "risk": 7.0
+  },
+  "roiAnalysis": {
+    "purchasePrice": "$XXX,XXX",
+    "projectedValue5yr": "$XXX,XXX",
+    "projectedValue10yr": "$XXX,XXX",
+    "capitalGrowthRate5yr": "X.X% p.a. (estimated)",
+    "totalROI5yr": "XX%",
+    "totalROI10yr": "XX%",
+    "annualisedReturn": "X.X%"
+  },
+  "rentalYield": {
+    "estimatedWeeklyRent": "$XXX–$XXX",
+    "grossYield": "X.X%",
+    "netYield": "X.X%",
+    "vacancyRate": "X.X%",
+    "rentalDemand": "High / Medium / Low",
+    "rentGrowthOutlook": "string"
+  },
+  "marketTrends": {
+    "medianPrice": "$XXX,XXX",
+    "priceGrowth12mo": "+X.X%",
+    "daysOnMarket": "XX",
+    "clearanceRate": "XX%",
+    "supplyDemandSignal": "string",
+    "marketPhase": "Early growth / Peak / Correction / Recovery",
+    "trend": "Upward / Stable / Downward"
+  },
+  "renovationUpside": {
+    "cosmeticReno": {
+      "cost": "$XX,XXX–$XX,XXX",
+      "estimatedValueAdd": "+$XX,XXX",
+      "roi": "XX%"
+    },
+    "majorReno": {
+      "cost": "$XX,XXX–$XXX,XXX",
+      "estimatedValueAdd": "+$XX,XXX",
+      "roi": "XX%"
+    },
+    "subdivisionPotential": "Yes / No / Possible — reason",
+    "developmentNote": "string"
+  },
+  "riskAssessment": {
+    "overallRisk": "Low / Medium / High",
+    "floodRisk": "Low / Medium / High",
+    "bushfireRisk": "Low / Medium / High",
+    "infrastructureRisk": "Low / Medium / High",
+    "economicRisk": "string",
+    "keyRisks": ["risk 1", "risk 2", "risk 3"]
+  },
+  "comparableSales": [
+    { "address": "XX Smith St, Suburb", "price": "$XXX,XXX", "beds": "3", "sold": "Feb 2025", "pricePerSqm": "$X,XXX" },
+    { "address": "XX Jones Ave, Suburb", "price": "$XXX,XXX", "beds": "3", "sold": "Jan 2025", "pricePerSqm": "$X,XXX" },
+    { "address": "XX Brown Rd, Suburb", "price": "$XXX,XXX", "beds": "3", "sold": "Mar 2025", "pricePerSqm": "$X,XXX" }
+  ],
+  "verdict": {
+    "recommendation": "Strong Buy / Buy / Hold / Avoid",
+    "confidence": "High / Medium / Low",
+    "summary": "3-4 sentence plain-English investor verdict",
+    "keyStrengths": ["strength 1", "strength 2", "strength 3"],
+    "keyCautions": ["caution 1", "caution 2"]
+  },
+  "disclaimer": "This report is produced for research purposes only and does not constitute financial advice. Always seek independent professional guidance before making investment decisions."
+}
+
+Property details:
+- Address: ${d.address}
+- Type: ${d.type}
+- Beds: ${d.beds}
+- Purchase price: ${d.price}
+- Investor goal: ${d.goal}
+- Additional context: ${d.notes || 'none'}
+
+Use web search to find current data on this suburb. Return ONLY valid JSON.`;
+}
+
+/* ─── REPORT RENDERER ─────────────────────────────────── */
+function renderReport(r, address) {
+  const out = document.getElementById('report-output');
+
+  const verdictColor = {
+    'Strong Buy': '#2A6B4A', 'Buy': '#2A6B4A',
+    'Hold': '#C4922A', 'Avoid': '#C4191A'
+  }[r.verdict?.recommendation] || '#2A6B4A';
+
+  const riskColor = { 'Low': '#2A6B4A', 'Medium': '#C4922A', 'High': '#E24B4A' };
+
+  out.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:0.5rem;">
+      <div>
+        <div class="report-title">PropIQ Investor Report</div>
+        <div class="report-address">${address} · Generated ${new Date().toLocaleDateString('en-AU', {day:'numeric',month:'long',year:'numeric'})}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;background:${verdictColor}15;border:1px solid ${verdictColor}40;border-radius:4px;padding:0.5rem 1rem;">
+        <span style="color:${verdictColor};font-weight:500;font-size:0.95rem;">${r.verdict?.recommendation}</span>
+        <span style="color:var(--ink-light);font-size:0.8rem;">· ${r.verdict?.confidence} confidence</span>
+      </div>
+    </div>
+
+    <div class="report-score-band">
+      ${[
+        ['Overall', r.investmentScores?.overall],
+        ['Growth', r.investmentScores?.growth],
+        ['Yield', r.investmentScores?.yield],
+        ['Risk', r.investmentScores?.risk]
+      ].map(([label, val]) => `
+        <div class="score-card">
+          <div class="score-num">${val ?? '–'}</div>
+          <div class="score-label">${label}</div>
+        </div>`).join('')}
+    </div>
+
+    <div class="report-section-h">Property overview</div>
+    <table class="report-table">
+      <tr><td>Estimated value</td><td>${r.propertyOverview?.estimatedValue} <span style="color:var(--ink-light);font-size:0.8rem;">(${r.propertyOverview?.estimatedValueNote})</span></td></tr>
+      <tr><td>Dwelling type</td><td>${r.propertyOverview?.dwellingType}</td></tr>
+      <tr><td>Zoning</td><td>${r.propertyOverview?.zoning}</td></tr>
+      <tr><td>Land size</td><td>${r.propertyOverview?.landSize}</td></tr>
+      <tr><td>Suburb</td><td>${r.propertyOverview?.suburb}, ${r.propertyOverview?.state}</td></tr>
+    </table>
+    <div class="report-body" style="margin-top:0.75rem;"><p>${r.propertyOverview?.suburbProfile}</p></div>
+
+    <div class="report-section-h">ROI analysis</div>
+    <table class="report-table">
+      <tr><td>Purchase price</td><td>${r.roiAnalysis?.purchasePrice}</td></tr>
+      <tr><td>Projected value (5yr)</td><td style="color:var(--green);">${r.roiAnalysis?.projectedValue5yr}</td></tr>
+      <tr><td>Projected value (10yr)</td><td style="color:var(--green);">${r.roiAnalysis?.projectedValue10yr}</td></tr>
+      <tr><td>Capital growth rate</td><td>${r.roiAnalysis?.capitalGrowthRate5yr}</td></tr>
+      <tr><td>Total ROI (5yr)</td><td style="color:var(--green);">${r.roiAnalysis?.totalROI5yr}</td></tr>
+      <tr><td>Total ROI (10yr)</td><td style="color:var(--green);">${r.roiAnalysis?.totalROI10yr}</td></tr>
+      <tr><td>Annualised return</td><td>${r.roiAnalysis?.annualisedReturn}</td></tr>
+    </table>
+
+    <div class="report-section-h">Rental yield</div>
+    <table class="report-table">
+      <tr><td>Estimated weekly rent</td><td>${r.rentalYield?.estimatedWeeklyRent}</td></tr>
+      <tr><td>Gross yield</td><td style="color:var(--green);">${r.rentalYield?.grossYield}</td></tr>
+      <tr><td>Net yield</td><td style="color:var(--green);">${r.rentalYield?.netYield}</td></tr>
+      <tr><td>Vacancy rate (suburb)</td><td>${r.rentalYield?.vacancyRate}</td></tr>
+      <tr><td>Rental demand</td><td>${r.rentalYield?.rentalDemand}</td></tr>
+      <tr><td>Rent growth outlook</td><td>${r.rentalYield?.rentGrowthOutlook}</td></tr>
+    </table>
+
+    <div class="report-section-h">Market trends</div>
+    <table class="report-table">
+      <tr><td>Suburb median price</td><td>${r.marketTrends?.medianPrice}</td></tr>
+      <tr><td>Price growth (12mo)</td><td style="color:var(--green);">${r.marketTrends?.priceGrowth12mo}</td></tr>
+      <tr><td>Avg days on market</td><td>${r.marketTrends?.daysOnMarket} days</td></tr>
+      <tr><td>Clearance rate</td><td>${r.marketTrends?.clearanceRate}</td></tr>
+      <tr><td>Market phase</td><td>${r.marketTrends?.marketPhase}</td></tr>
+      <tr><td>Trend</td><td>${r.marketTrends?.trend}</td></tr>
+    </table>
+    <div class="report-body" style="margin-top:0.75rem;"><p>${r.marketTrends?.supplyDemandSignal}</p></div>
+
+    <div class="report-section-h">Renovation upside</div>
+    <table class="report-table">
+      <tr><td>Cosmetic renovation cost</td><td>${r.renovationUpside?.cosmeticReno?.cost}</td></tr>
+      <tr><td>Cosmetic value add</td><td style="color:var(--green);">${r.renovationUpside?.cosmeticReno?.estimatedValueAdd} (${r.renovationUpside?.cosmeticReno?.roi} ROI)</td></tr>
+      <tr><td>Major renovation cost</td><td>${r.renovationUpside?.majorReno?.cost}</td></tr>
+      <tr><td>Major reno value add</td><td style="color:var(--green);">${r.renovationUpside?.majorReno?.estimatedValueAdd} (${r.renovationUpside?.majorReno?.roi} ROI)</td></tr>
+      <tr><td>Subdivision potential</td><td>${r.renovationUpside?.subdivisionPotential}</td></tr>
+    </table>
+    <div class="report-body" style="margin-top:0.75rem;"><p>${r.renovationUpside?.developmentNote}</p></div>
+
+    <div class="report-section-h">Risk assessment</div>
+    <table class="report-table">
+      <tr><td>Overall risk</td><td style="color:${riskColor[r.riskAssessment?.overallRisk]||'#1A1A18'};">${r.riskAssessment?.overallRisk}</td></tr>
+      <tr><td>Flood risk</td><td>${r.riskAssessment?.floodRisk}</td></tr>
+      <tr><td>Bushfire risk</td><td>${r.riskAssessment?.bushfireRisk}</td></tr>
+      <tr><td>Infrastructure risk</td><td>${r.riskAssessment?.infrastructureRisk}</td></tr>
+    </table>
+    <div class="report-body" style="margin-top:0.75rem;">
+      <p>${r.riskAssessment?.economicRisk}</p>
+      ${r.riskAssessment?.keyRisks?.length ? `<p><strong>Key risks:</strong> ${r.riskAssessment.keyRisks.join(' · ')}</p>` : ''}
+    </div>
+
+    <div class="report-section-h">Comparable sales</div>
+    <table class="report-table" style="width:100%;">
+      <thead><tr style="font-size:0.75rem;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.05em;">
+        <th style="text-align:left;padding:0.5rem 0;font-weight:500;">Address</th>
+        <th style="text-align:right;padding:0.5rem 0;font-weight:500;">Price</th>
+        <th style="text-align:right;padding:0.5rem 0;font-weight:500;">Beds</th>
+        <th style="text-align:right;padding:0.5rem 0;font-weight:500;">Sold</th>
+        <th style="text-align:right;padding:0.5rem 0;font-weight:500;">/m²</th>
+      </tr></thead>
+      <tbody>
+        ${(r.comparableSales||[]).map(s => `
+          <tr>
+            <td style="padding:0.5rem 0;font-size:0.875rem;">${s.address}</td>
+            <td style="text-align:right;font-size:0.875rem;font-weight:500;">${s.price}</td>
+            <td style="text-align:right;font-size:0.875rem;color:var(--ink-light);">${s.beds}bd</td>
+            <td style="text-align:right;font-size:0.875rem;color:var(--ink-light);">${s.sold}</td>
+            <td style="text-align:right;font-size:0.875rem;color:var(--ink-light);">${s.pricePerSqm}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+
+    <div class="report-section-h">Investor verdict</div>
+    <div class="report-body">
+      <p>${r.verdict?.summary}</p>
+      ${r.verdict?.keyStrengths?.length ? `
+        <p><strong>Key strengths:</strong></p>
+        <ul style="padding-left:1.25rem;margin-bottom:0.75rem;">
+          ${r.verdict.keyStrengths.map(s => `<li style="margin-bottom:0.3rem;">${s}</li>`).join('')}
+        </ul>` : ''}
+      ${r.verdict?.keyCautions?.length ? `
+        <p><strong>Points of caution:</strong></p>
+        <ul style="padding-left:1.25rem;margin-bottom:0.75rem;">
+          ${r.verdict.keyCautions.map(c => `<li style="margin-bottom:0.3rem;">${c}</li>`).join('')}
+        </ul>` : ''}
+    </div>
+
+    <div style="margin-top:2rem;padding:1rem 1.25rem;background:#F5F0E8;border-radius:4px;border:1px solid rgba(26,26,24,0.08);">
+      <p style="font-size:0.78rem;color:var(--ink-light);line-height:1.6;margin:0;">${r.disclaimer}</p>
+    </div>
+
+    <div style="margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap;">
+      <button onclick="window.print()" class="btn-primary" style="font-size:0.9rem;padding:0.75rem 1.5rem;">Print / Save PDF</button>
+      <button onclick="resetForm()" style="background:none;border:1px solid var(--border);border-radius:4px;padding:0.75rem 1.5rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--ink-light);">Analyse another property</button>
+    </div>
+  `;
+
+  out.classList.add('active');
+  out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('btn-analyse').disabled = false;
+}
+
+function resetForm() {
+  document.getElementById('report-output').classList.remove('active');
+  document.getElementById('f-address').value = '';
+  document.getElementById('analyser').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
