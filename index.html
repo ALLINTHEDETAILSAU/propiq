@@ -794,6 +794,14 @@
       <span class="lbl">PropIQ Investor Report</span>
       <span class="amt">$19 AUD</span>
     </div>
+    <div id="apple-google-pay" style="display:none;margin-bottom:1rem;">
+      <div id="payment-request-button"></div>
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-top:1rem;margin-bottom:1rem;">
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+        <span style="font-size:0.78rem;color:var(--ink-light);">or pay by card</span>
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+      </div>
+    </div>
     <div id="card-element"></div>
     <div id="card-errors"></div>
     <button class="btn-primary" id="pay-btn" onclick="processPayment()" style="width:100%;justify-content:center;">
@@ -808,7 +816,7 @@
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 /* ─── CONFIG ──────────────────────────────────────────── */
 const ANTHROPIC_API = '/api/analyse';
-const STRIPE_PUBLIC_KEY = 'pk_live_51SrpQoDJDtzh4nWtlVDhn9UaW5rTJuCHfJbC7xqgkMDMwoFFOdCpqiipBjQis3TgIxyyPMOARqaFECD5oz7XEX7000NxKbHlYr'; // Replace with your key
+const STRIPE_PUBLIC_KEY = 'pk_test_YOUR_STRIPE_PUBLISHABLE_KEY'; // Replace with your key
 
 let stripe, cardElement, formData = {};
 
@@ -823,6 +831,7 @@ function initStripe() {
   try {
     stripe = Stripe(STRIPE_PUBLIC_KEY);
     const elements = stripe.elements();
+
     cardElement = elements.create('card', {
       style: {
         base: {
@@ -837,6 +846,65 @@ function initStripe() {
     cardElement.on('change', e => {
       document.getElementById('card-errors').textContent = e.error ? e.error.message : '';
     });
+
+    const paymentRequest = stripe.paymentRequest({
+      country: 'AU',
+      currency: 'aud',
+      total: { label: 'PropIQ Investor Report', amount: 1900 },
+      requestPayerName: false,
+      requestPayerEmail: false,
+    });
+
+    const prButton = elements.create('paymentRequestButton', {
+      paymentRequest,
+      style: {
+        paymentRequestButton: {
+          type: 'buy',
+          theme: 'dark',
+          height: '48px',
+        }
+      }
+    });
+
+    paymentRequest.canMakePayment().then(result => {
+      if (result) {
+        document.getElementById('apple-google-pay').style.display = 'block';
+        prButton.mount('#payment-request-button');
+      }
+    });
+
+    paymentRequest.on('paymentmethod', async (ev) => {
+      try {
+        const intentRes = await fetch('/api/create-payment-intent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: 1900, currency: 'aud' })
+        });
+        const { clientSecret } = await intentRes.json();
+
+        const { error, paymentIntent } = await stripe.confirmCardPayment(
+          clientSecret,
+          { payment_method: ev.paymentMethod.id },
+          { handleActions: false }
+        );
+
+        if (error) {
+          ev.complete('fail');
+          document.getElementById('card-errors').textContent = error.message;
+        } else {
+          ev.complete('success');
+          if (paymentIntent.status === 'requires_action') {
+            await stripe.confirmCardPayment(clientSecret);
+          }
+          closeModal();
+          runAnalysis();
+        }
+      } catch(err) {
+        ev.complete('fail');
+        document.getElementById('card-errors').textContent = 'Payment failed. Please try again.';
+      }
+    });
+
   } catch(e) {
     console.log('Stripe not initialised — test mode');
   }
@@ -1281,7 +1349,7 @@ function initAutocomplete() {
 </script>
 
 <script>
-const GOOGLE_MAPS_KEY = 'AIzaSyCbv09dQ9bfL90MItzQ2QPVkV95pmhPE5E';
+const GOOGLE_MAPS_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
 if (!GOOGLE_MAPS_KEY.includes('YOUR_')) {
   const s = document.createElement('script');
   s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&callback=initAutocomplete`;
