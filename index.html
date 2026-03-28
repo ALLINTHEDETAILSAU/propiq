@@ -210,6 +210,7 @@
     .analyser-wrap { grid-template-columns: 1fr; gap: 3rem; }
     nav { padding: 1rem 1.5rem; }
     .nav-links { gap: 1rem; }
+    .nav-links a:not(.nav-cta) { display: none; }
     .hero { padding: 7rem 1.5rem 3rem; }
     .hero > div { grid-template-columns: 1fr !important; }
     .hero > div > div:last-child { display: none !important; }
@@ -1349,7 +1350,7 @@ function initAutocomplete() {
 </script>
 
 <script>
-const GOOGLE_MAPS_KEY = 'AIzaSyCbv09dQ9bfL90MItzQ2QPVkV95pmhPE5E';
+const GOOGLE_MAPS_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
 if (!GOOGLE_MAPS_KEY.includes('YOUR_')) {
   const s = document.createElement('script');
   s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&callback=initAutocomplete`;
