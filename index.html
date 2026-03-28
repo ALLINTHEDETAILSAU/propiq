@@ -663,7 +663,7 @@
           </div>
           <div class="form-row">
             <label>Purchase price ($AUD)</label>
-            <input type="number" id="f-price" placeholder="e.g. 650000" />
+            <input type="text" id="f-price" placeholder="e.g. 650,000" inputmode="numeric" />
           </div>
         </div>
         <div class="form-row">
@@ -808,9 +808,15 @@
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 /* ─── CONFIG ──────────────────────────────────────────── */
 const ANTHROPIC_API = '/api/analyse';
-const STRIPE_PUBLIC_KEY = 'pk_live_51SrpQoDJDtzh4nWtlVDhn9UaW5rTJuCHfJbC7xqgkMDMwoFFOdCpqiipBjQis3TgIxyyPMOARqaFECD5oz7XEX7000NxKbHlYr'; // Replace with your key
+const STRIPE_PUBLIC_KEY = 'pk_test_YOUR_STRIPE_PUBLISHABLE_KEY'; // Replace with your key
 
 let stripe, cardElement, formData = {};
+
+/* ─── PRICE FORMATTING ────────────────────────────────── */
+document.getElementById('f-price').addEventListener('input', function() {
+  const raw = this.value.replace(/[^0-9]/g, '');
+  this.value = raw ? parseInt(raw).toLocaleString('en-AU') : '';
+});
 
 /* ─── STRIPE INIT ─────────────────────────────────────── */
 function initStripe() {
@@ -853,7 +859,7 @@ function initiateAnalysis() {
   formData = {
     address,
     type: document.getElementById('f-type').value,
-    price: document.getElementById('f-price').value || 'not specified',
+    price: document.getElementById('f-price').value.replace(/,/g, '') || 'not specified',
     goal: document.getElementById('f-goal').value,
     notes: document.getElementById('f-notes').value
   };
@@ -1275,7 +1281,7 @@ function initAutocomplete() {
 </script>
 
 <script>
-const GOOGLE_MAPS_KEY = 'AIzaSyCbv09dQ9bfL90MItzQ2QPVkV95pmhPE5E';
+const GOOGLE_MAPS_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
 if (!GOOGLE_MAPS_KEY.includes('YOUR_')) {
   const s = document.createElement('script');
   s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&callback=initAutocomplete`;
