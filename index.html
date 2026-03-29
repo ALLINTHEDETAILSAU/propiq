@@ -651,8 +651,7 @@
           <label>Property address or lot number *</label>
           <input type="text" id="f-address" placeholder="e.g. 14 Coastal Drive, Mandurah WA 6210" />
         </div>
-        <div class="form-grid-2">
-          <div class="form-row">
+        <div class="form-row">
             <label>Property type</label>
             <select id="f-type">
               <option value="house">House</option>
@@ -666,7 +665,6 @@
             <label>Purchase price ($AUD)</label>
             <input type="text" id="f-price" placeholder="e.g. 650,000" inputmode="numeric" />
           </div>
-        </div>
         <div class="form-row">
           <label>Investor goal</label>
           <select id="f-goal">
@@ -1350,7 +1348,7 @@ function initAutocomplete() {
 </script>
 
 <script>
-const GOOGLE_MAPS_KEY = 'AIzaSyCbv09dQ9bfL90MItzQ2QPVkV95pmhPE5E';
+const GOOGLE_MAPS_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
 if (!GOOGLE_MAPS_KEY.includes('YOUR_')) {
   const s = document.createElement('script');
   s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=places&callback=initAutocomplete`;
