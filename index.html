@@ -896,7 +896,7 @@ function initStripe() {
             await stripe.confirmCardPayment(clientSecret);
           }
           closeModal();
-          runAnalysis();
+          runAnalysis(paymentIntent.id);
         }
       } catch(err) {
         ev.complete('fail');
@@ -971,7 +971,7 @@ async function processPayment() {
 
     if (paymentIntent.status === 'succeeded') {
       closeModal();
-      runAnalysis();
+      runAnalysis(paymentIntent.id);
     }
   } catch(err) {
     document.getElementById('card-errors').textContent = 'Payment failed. Please try again.';
@@ -1015,7 +1015,17 @@ function hideLoader(timer) {
   document.getElementById('loader').classList.remove('active');
 }
 
-async function runAnalysis() {
+/* ─── HTML SANITISER ──────────────────────────────────── */
+function sanitise(str) {
+  if (typeof str !== 'string') return str ?? '';
+  return str.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+async function runAnalysis(paymentId) {
+  if (!paymentId) {
+    showError('Payment not confirmed. Please complete payment first.');
+    return;
+  }
   document.getElementById('btn-analyse').disabled = true;
   document.getElementById('report-output').classList.remove('active');
   const timer = showLoader();
@@ -1026,7 +1036,10 @@ async function runAnalysis() {
   try {
     const res = await fetch(ANTHROPIC_API, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Payment-Token': paymentId
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 8000,
@@ -1224,6 +1237,7 @@ function renderReport(r, address) {
   }[r.verdict?.recommendation] || '#2A6B4A';
 
   const riskColor = { 'Low': '#2A6B4A', 'Medium': '#C4922A', 'High': '#E24B4A' };
+  const s = sanitise;
 
   out.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:0.5rem;">
